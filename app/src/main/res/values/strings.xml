@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Dose Certa</string>
+    <string-array name="intervalos_array">
+        <item>4/4 horas</item>
+        <item>6/6 horas</item>
+        <item>8/8 horas</item>
+        <item>12/12 horas</item>
+        <item>24/24 horas</item>
+    </string-array>
+
+</resources>
