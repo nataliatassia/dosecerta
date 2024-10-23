@@ -1,13 +1,14 @@
 package com.naty24.dosecerta;
 
 import android.annotation.SuppressLint;
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.util.Log; // Adicionado para log de depuração
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -17,105 +18,126 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ListaMedicamentosActivity extends AppCompatActivity {
-    private DBHelper dbHelper;
-    private ListView listView;
-    private ArrayAdapter<String> adapter;
-    private List<Medicamento> listaMedicamentos;
+    private DBHelper dbHelper; // Instância do DBHelper para acesso ao banco de dados
+    private ListView listView; // Lista que exibirá os medicamentos
+    private ArrayAdapter<String> adapter; // Adaptador para a ListView
+    private List<Medicamento> listaMedicamentos; // Lista de medicamentos
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_lista_medicamentos);
+        setContentView(R.layout.activity_lista_medicamentos); // Define o layout da atividade
 
-        dbHelper = new DBHelper(this);
-        listView = findViewById(R.id.listViewMedicamentos);
-        listaMedicamentos = new ArrayList<>();
+        dbHelper = new DBHelper(this); // Inicializa o DBHelper
+        listView = findViewById(R.id.listViewMedicamentos); // Obtém a referência da ListView
+        listaMedicamentos = new ArrayList<>(); // Inicializa a lista de medicamentos
 
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, new ArrayList<>());
-        listView.setAdapter(adapter);
+        // Inicializa o adaptador da ListView
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_multiple_choice, new ArrayList<>());
+        listView.setAdapter(adapter); // Define o adaptador para a ListView
+        listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE); // Permite seleção múltipla
 
-        carregarMedicamentos();
+        // Obtém o ID do usuário logado a partir das preferências compartilhadas
+        SharedPreferences sharedPreferences = getSharedPreferences("DoseCertaPrefs", MODE_PRIVATE);
+        long usuarioId = sharedPreferences.getLong("usuario_id", -1);
 
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            Medicamento medicamento = listaMedicamentos.get(position);
-            if (medicamento.isAlarmeAtivo()) {
-                desativarAlarme(medicamento.getId());
-                medicamento.setAlarmeAtivo(false);
-                Toast.makeText(this, "Alarme desativado para " + medicamento.getNome(), Toast.LENGTH_SHORT).show();
-            } else {
-                configurarAlarme(medicamento);
-                medicamento.setAlarmeAtivo(true);
-                Toast.makeText(this, "Alarme ativado para " + medicamento.getNome(), Toast.LENGTH_SHORT).show();
-            }
-            atualizarLista();
+        // Verifica se o usuário está logado
+        if (usuarioId == -1) {
+            Toast.makeText(this, "Erro ao carregar medicamentos: usuário não encontrado.", Toast.LENGTH_SHORT).show();
+            finish(); // Encerra a atividade se o usuário não for encontrado
+            return;
+        }
+
+        // Adiciona log para depuração
+        Log.d("Debug", "usuarioId: " + usuarioId);
+
+        // Carrega os medicamentos do banco de dados
+        carregarMedicamentos(usuarioId);
+
+        // Botão para excluir medicamentos selecionados
+        Button btnExcluir = findViewById(R.id.btn_excluir);
+        btnExcluir.setOnClickListener(v -> excluirMedicamentosSelecionados());
+
+        // Botão para voltar à tela anterior
+        Button btnVoltar = findViewById(R.id.btn_voltar);
+        btnVoltar.setOnClickListener(v -> {
+            Intent intent = new Intent(ListaMedicamentosActivity.this, MainActivity.class);
+            startActivity(intent); // Inicia a MainActivity
+            finish(); // Encerra a atividade atual
         });
     }
 
-    private void carregarMedicamentos() {
-        SQLiteDatabase db = dbHelper.getReadableDatabase();
-        // Obtendo o usuario_id do usuário logado (substitua pelo método adequado de obtenção do id do usuário)
-        long usuarioId = getIntent().getLongExtra("usuario_id", -1);
+    // Método para carregar medicamentos do banco de dados
+    private void carregarMedicamentos(long usuarioId) {
+        SQLiteDatabase db = dbHelper.getReadableDatabase(); // Obtém uma instância do banco de dados
+        Cursor cursor = null;
 
-        // Filtra os medicamentos pelo usuario_id
-        String selection = "usuario_id = ?";
-        String[] selectionArgs = new String[]{String.valueOf(usuarioId)};
+        try {
+            // Seleciona todos os medicamentos associados ao usuário logado
+            String selection = "usuario_id = ? AND ativo = 1"; // Garante que apenas medicamentos ativos sejam carregados
+            String[] selectionArgs = new String[]{String.valueOf(usuarioId)};
+            cursor = db.query("medicamentos", null, selection, selectionArgs, null, null, null);
 
-        Cursor cursor = db.query("medicamentos", null, selection, selectionArgs, null, null, null);
-        listaMedicamentos.clear();
-        while (cursor.moveToNext()) {
-            @SuppressLint("Range") long id = cursor.getLong(cursor.getColumnIndex("id"));
-            @SuppressLint("Range") String nome = cursor.getString(cursor.getColumnIndex("nome"));
-            @SuppressLint("Range") String proximoAlarme = cursor.getString(cursor.getColumnIndex("proximo_alarme"));
-            boolean ativo = true; // Implementar lógica para verificar se o alarme está ativo
+            // Verifica se o cursor contém resultados
+            if (cursor != null && cursor.moveToFirst()) {
+                listaMedicamentos.clear(); // Limpa a lista de medicamentos
+                adapter.clear(); // Limpa o adaptador
 
-            listaMedicamentos.add(new Medicamento(id, nome, proximoAlarme, ativo));
+                do {
+                    // Obtém os dados do medicamento do cursor
+                    @SuppressLint("Range") long id = cursor.getLong(cursor.getColumnIndex("id"));
+                    @SuppressLint("Range") String nome = cursor.getString(cursor.getColumnIndex("nome"));
+                    @SuppressLint("Range") String ultimaHora = cursor.getString(cursor.getColumnIndex("ultima_hora")); // Última hora
+                    @SuppressLint("Range") String dataUltima = cursor.getString(cursor.getColumnIndex("data_ultima")); // Data da última dose
+                    @SuppressLint("Range") String proximoAlarme = cursor.getString(cursor.getColumnIndex("proximo_alarme")); // Próximo alarme
+                    @SuppressLint("Range") int diasTratamento = cursor.getInt(cursor.getColumnIndex("dias_tratamento"));
+                    @SuppressLint("Range") int intervalo = cursor.getInt(cursor.getColumnIndex("intervalo"));
+                    @SuppressLint("Range") int ativo = cursor.getInt(cursor.getColumnIndex("ativo"));
+
+                    // Adiciona medicamento à lista
+                    Medicamento medicamento = new Medicamento(id, nome, ultimaHora, dataUltima, proximoAlarme, diasTratamento, usuarioId, intervalo, ativo == 1);
+                    listaMedicamentos.add(medicamento);
+
+                    // Adiciona ao adaptador
+                    adapter.add(medicamento.getNome() + " - Próximo Alarme: " + medicamento.getProximoAlarme() +
+                            " - Dias de Tratamento: " + medicamento.getDiasTratamento() +
+                            (medicamento.isAlarmeAtivo() ? " (Ativo)" : " (Inativo)"));
+                } while (cursor.moveToNext());
+
+                adapter.notifyDataSetChanged(); // Notifica que os dados foram alterados
+            } else {
+                Toast.makeText(this, "Nenhum medicamento encontrado.", Toast.LENGTH_SHORT).show();
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // Registra a exceção
+            Toast.makeText(this, "Erro ao carregar medicamentos: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        } finally {
+            if (cursor != null) {
+                cursor.close(); // Fecha o cursor se não for nulo
+            }
+            db.close(); // Fecha o banco de dados
         }
-        cursor.close();
-        atualizarLista();
     }
 
-    private void atualizarLista() {
-        adapter.clear();
-        for (Medicamento medicamento : listaMedicamentos) {
-            adapter.add(medicamento.getNome() + " - Próximo Alarme: " + medicamento.getProximoAlarme() +
-                    (medicamento.isAlarmeAtivo() ? " (Ativo)" : " (Inativo)"));
-        }
-        adapter.notifyDataSetChanged();
-    }
+    // Exclui os medicamentos selecionados da lista e do banco de dados
+    private void excluirMedicamentosSelecionados() {
+        SQLiteDatabase db = dbHelper.getWritableDatabase(); // Obtém uma instância gravável do banco de dados
+        List<Medicamento> medicamentosParaExcluir = new ArrayList<>(); // Lista de medicamentos a serem excluídos
 
-    private void desativarAlarme(long id) {
-        AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
-        Intent intent = new Intent(this, AlarmReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) id, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-        alarmManager.cancel(pendingIntent);
-    }
-
-    private void configurarAlarme(Medicamento medicamento) {
-        // Lógica para configurar o alarme
-        // Utilize o método que já criamos para configurar o alarme em AdicionarMedicamentoActivity
-        String proximoAlarme = medicamento.getProximoAlarme();
-        // Exemplo de lógica para configurar o alarme (caso já tenha uma função, chame-a)
-        // configureAlarm(proximoAlarme, medicamento.getNome(), medicamento.getId());
-    }
-
-    private static class Medicamento {
-        private long id;
-        private String nome;
-        private String proximoAlarme;
-        private boolean alarmeAtivo;
-
-        public Medicamento(long id, String nome, String proximoAlarme, boolean alarmeAtivo) {
-            this.id = id;
-            this.nome = nome;
-            this.proximoAlarme = proximoAlarme;
-            this.alarmeAtivo = alarmeAtivo;
+        // Itera pela lista de medicamentos e verifica os selecionados
+        for (int i = 0; i < listView.getCount(); i++) {
+            if (listView.isItemChecked(i)) {
+                medicamentosParaExcluir.add(listaMedicamentos.get(i)); // Adiciona o medicamento à lista de exclusão
+            }
         }
 
-        public long getId() { return id; }
-        public String getNome() { return nome; }
-        public String getProximoAlarme() { return proximoAlarme; }
-        public boolean isAlarmeAtivo() { return alarmeAtivo; }
-        public void setAlarmeAtivo(boolean alarmeAtivo) { this.alarmeAtivo = alarmeAtivo; }
-    }
+        // Exclui cada medicamento selecionado do banco de dados
+        for (Medicamento medicamento : medicamentosParaExcluir) {
+            db.delete("medicamentos", "id = ?", new String[]{String.valueOf(medicamento.getId())}); // Exclui do banco
+            listaMedicamentos.remove(medicamento); // Remove da lista local
+        }
 
+        adapter.notifyDataSetChanged(); // Notifica que os dados foram alterados
+        Toast.makeText(this, "Medicamentos excluídos com sucesso.", Toast.LENGTH_SHORT).show(); // Mensagem de sucesso
+    }
 }

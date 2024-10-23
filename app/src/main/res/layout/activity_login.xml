@@ -8,6 +8,14 @@
         android:orientation="vertical"
         android:padding="16dp">
 
+        <TextView
+            android:id="@+id/textView3"
+            android:layout_width="match_parent"
+            android:layout_height="129dp"
+            android:text="Que bom que você voltou! Entre com sua conta para gerenciar seus medicamentos e alarmes!"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
         <EditText
             android:id="@+id/et_usuario"
             android:layout_width="match_parent"
@@ -23,8 +31,8 @@
 
         <Button
             android:id="@+id/btn_login"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_width="380dp"
+            android:layout_height="61dp"
             android:backgroundTint="#4CAF50"
             android:text="Login" />
     </LinearLayout>

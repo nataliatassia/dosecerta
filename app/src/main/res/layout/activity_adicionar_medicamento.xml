@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFFFFF"
-    android:backgroundTint="#FFFFFF">
+    android:background="#FFFFFF">
 
     <TextView
         android:id="@+id/tituloaddmed"
@@ -13,10 +13,11 @@
         android:layout_height="wrap_content"
         android:text="Adicionar Medicamento"
         android:textSize="34sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHorizontal_bias="0.5" />
 
     <EditText
         android:id="@+id/et_nome"
@@ -25,17 +26,17 @@
         android:layout_marginTop="16dp"
         android:hint="Nome do Medicamento"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tituloaddmed" />
 
     <TextView
         android:id="@+id/perguntahoras"
-        android:layout_width="301dp"
-        android:layout_height="25dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="De quantas em quantas horas?"
         android:textSize="16sp"
+        android:textStyle="italic"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_nome" />
@@ -46,7 +47,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/perguntahoras" />
 
@@ -55,34 +55,41 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="Última Hora (HH:mm)"
+        android:hint="Último Horario Que Tomou o Medicamento (HH:mm)"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/et_data_ultima" />
+        app:layout_constraintTop_toBottomOf="@+id/spinner_intervalo" />
 
     <EditText
         android:id="@+id/et_data_ultima"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
-        android:hint="Data da Última Dose (dd/MM/yyyy)"
+        android:hint="Data do Último Dia de Tratamento (dd/MM/yyyy)"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/spinner_intervalo" />
-
-    <Button
-        android:id="@+id/btn_salvar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
-        android:backgroundTint="#4CAF50"
-        android:text="Salvar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/et_ultima_hora" />
 
+    <Button
+        android:id="@+id/btn_salvar"
+        android:layout_width="407dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="24dp"
+        android:backgroundTint="#4CAF50"
+        android:text="Salvar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/et_data_ultima" />
+
+    <Button
+        android:id="@+id/btn_voltar"
+        android:layout_width="409dp"
+        android:layout_height="56dp"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="#2196F3"
+        android:text="Voltar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_salvar" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

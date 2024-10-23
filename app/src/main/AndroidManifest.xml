@@ -2,33 +2,47 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Permissões -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- Adicionando permissão de internet, se necessário -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+
     <application
         android:allowBackup="true"
-        android:dataExtractionRules="@xml/data_extraction_rules"
-        android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.DoseCerta"
-        tools:targetApi="31">
+        android:theme="@style/Theme.DoseCerta">
+
+        <!-- MainActivity (tela inicial) -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginActivity"/>
-        <activity android:name=".RegistrarUsuarioActivity"/>
-        <activity android:name=".AdicionarMedicamentoActivity"/>
-        <activity android:name=".ListaMedicamentosActivity"/>
-        <activity android:name=".PressaoGlicemiaActivity"/>
+
+        <!-- Atividades secundárias -->
+        <activity android:name=".LoginActivity" android:exported="false" />
+        <activity android:name=".RegistrarUsuarioActivity" android:exported="false" />
+        <activity android:name=".AdicionarMedicamentoActivity" android:exported="false" />
+        <activity android:name=".ListaMedicamentosActivity" android:exported="false" />
+        <activity android:name=".PressaoGlicemiaActivity" android:exported="false" />
+
+        <!-- Adicionando um receiver para alarmes, se necessário -->
+        <receiver
+            android:name=".AlarmReceiver"
+            android:exported="true"
+            tools:ignore="ExportedReceiver" />
     </application>
 
 </manifest>
