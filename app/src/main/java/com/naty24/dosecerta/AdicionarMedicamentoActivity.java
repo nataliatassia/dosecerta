@@ -86,18 +86,30 @@ public class AdicionarMedicamentoActivity extends AppCompatActivity {
             // Calculando o próximo alarme
             Calendar calendar = calcularProximosAlarmes(ultimaHora, dataUltima, intervalo);
             if (calendar != null) {
-                // Loop para definir alarmes até o final do dia final do tratamento (23:59)
-                while (calendar.getTimeInMillis() <= System.currentTimeMillis() + AlarmManager.INTERVAL_DAY) {
-                    values.put("proximo_alarme", new SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.getTime()));
-                    long id = db.insert("medicamentos", null, values);
-                    if (id != -1) {
-                        // Configurando o alarme para cada entrada
-                        configurarAlarme(calendar, nome, id);
+                // Loop para definir alarmes até a data final do tratamento
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                try {
+                    Date dataFinal = sdf.parse(dataUltima);
+                    if (dataFinal != null) {
+                        while (calendar.getTimeInMillis() <= dataFinal.getTime() + AlarmManager.INTERVAL_DAY) {
+                            values.put("proximo_alarme", new SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.getTime()));
+                            long id = db.insert("medicamentos", null, values);
+                            if (id != -1) {
+                                // Configurando o alarme para cada entrada
+                                configurarAlarme(calendar, nome, id);
+                            }
+                            // Adiciona o intervalo de horas para o próximo alarme
+                            calendar.add(Calendar.HOUR_OF_DAY, intervalo);
+                        }
+                        Toast.makeText(this, "Medicamento adicionado com sucesso!", Toast.LENGTH_SHORT).show();
+                        finish();
+                    } else {
+                        Toast.makeText(this, "Data final inválida.", Toast.LENGTH_SHORT).show();
                     }
-                    calendar.add(Calendar.HOUR_OF_DAY, intervalo);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                    Toast.makeText(this, "Erro ao analisar a data final.", Toast.LENGTH_SHORT).show();
                 }
-                Toast.makeText(this, "Medicamento adicionado com sucesso!", Toast.LENGTH_SHORT).show();
-                finish();
             } else {
                 Toast.makeText(this, "Erro ao calcular o próximo alarme.", Toast.LENGTH_SHORT).show();
             }

@@ -99,8 +99,7 @@ public class ListaMedicamentosActivity extends AppCompatActivity {
                     listaMedicamentos.add(medicamento);
 
                     // Adiciona ao adaptador
-                    adapter.add(medicamento.getNome() + " - Próximo Alarme: " + medicamento.getProximoAlarme() +
-                            " - Dias de Tratamento: " + medicamento.getDiasTratamento() +
+                    adapter.add(medicamento.getNome() + " - Próximo Alarme: " + medicamento.getProximoAlarme()  +
                             (medicamento.isAlarmeAtivo() ? " (Ativo)" : " (Inativo)"));
                 } while (cursor.moveToNext());
 
