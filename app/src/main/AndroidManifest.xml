@@ -4,10 +4,11 @@
 
     <!-- Permissões -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
-    <uses-permission android:name="android.permission.INTERNET" /> <!-- Adicionando permissão de internet, se necessário -->
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" /> <!-- Ajustado para a permissão correta -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- Permissão de internet, se necessário -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
@@ -38,7 +39,7 @@
         <activity android:name=".ListaMedicamentosActivity" android:exported="false" />
         <activity android:name=".PressaoGlicemiaActivity" android:exported="false" />
 
-        <!-- Adicionando um receiver para alarmes, se necessário -->
+        <!-- Adicionando um receiver para alarmes -->
         <receiver
             android:name=".AlarmReceiver"
             android:exported="true"

@@ -10,17 +10,15 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.Locale;
 
 public class AdicionarMedicamentoActivity extends AppCompatActivity {
@@ -33,34 +31,28 @@ public class AdicionarMedicamentoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_adicionar_medicamento);
 
-        // Inicializando o banco de dados
         dbHelper = new DBHelper(this);
 
-        // Recuperando o ID do usuário a partir das preferências compartilhadas
         SharedPreferences sharedPreferences = getSharedPreferences("DoseCertaPrefs", MODE_PRIVATE);
         usuarioId = sharedPreferences.getLong("usuario_id", -1);
 
-        // Verificação de autenticação do usuário
         if (usuarioId == -1) {
             Toast.makeText(this, "Usuário não autenticado. Faça login novamente.", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        // Configurando o Spinner de intervalos
         Spinner spinner = findViewById(R.id.spinner_intervalo);
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
                 R.array.intervalos_array, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
 
-        // Configuração do botão "Salvar"
         findViewById(R.id.btn_salvar).setOnClickListener(v -> {
             String nome = ((EditText) findViewById(R.id.et_nome)).getText().toString().trim();
             String ultimaHora = ((EditText) findViewById(R.id.et_ultima_hora)).getText().toString().trim();
             String dataUltima = ((EditText) findViewById(R.id.et_data_ultima)).getText().toString().trim();
 
-            // Verificar se os campos obrigatórios estão preenchidos
             if (nome.isEmpty() || ultimaHora.isEmpty() || dataUltima.isEmpty()) {
                 Toast.makeText(this, "Por favor, preencha todos os campos.", Toast.LENGTH_SHORT).show();
                 return;
@@ -74,7 +66,6 @@ public class AdicionarMedicamentoActivity extends AppCompatActivity {
                 return;
             }
 
-            // Inicializando o banco de dados
             SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
             values.put("nome", nome);
@@ -83,95 +74,83 @@ public class AdicionarMedicamentoActivity extends AppCompatActivity {
             values.put("data_ultima", dataUltima);
             values.put("usuario_id", usuarioId);
 
-            // Calculando o próximo alarme
-            Calendar calendar = calcularProximosAlarmes(ultimaHora, dataUltima, intervalo);
-            if (calendar != null) {
-                // Loop para definir alarmes até a data final do tratamento
-                SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
-                try {
-                    Date dataFinal = sdf.parse(dataUltima);
-                    if (dataFinal != null) {
-                        while (calendar.getTimeInMillis() <= dataFinal.getTime() + AlarmManager.INTERVAL_DAY) {
-                            values.put("proximo_alarme", new SimpleDateFormat("HH:mm", Locale.getDefault()).format(calendar.getTime()));
-                            long id = db.insert("medicamentos", null, values);
-                            if (id != -1) {
-                                // Configurando o alarme para cada entrada
-                                configurarAlarme(calendar, nome, id);
-                            }
-                            // Adiciona o intervalo de horas para o próximo alarme
-                            calendar.add(Calendar.HOUR_OF_DAY, intervalo);
-                        }
-                        Toast.makeText(this, "Medicamento adicionado com sucesso!", Toast.LENGTH_SHORT).show();
-                        finish();
-                    } else {
-                        Toast.makeText(this, "Data final inválida.", Toast.LENGTH_SHORT).show();
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            Calendar calendar = Calendar.getInstance();
+
+            try {
+                // Configura o calendário para a data de término do tratamento
+                SimpleDateFormat dateOnlySdf = new SimpleDateFormat("dd/MM/yyyy", Locale.getDefault());
+                Calendar dataFinalCalendar = Calendar.getInstance();
+                dataFinalCalendar.setTime(dateOnlySdf.parse(dataUltima));
+                // Ajusta a data final para o final do dia
+                dataFinalCalendar.set(Calendar.HOUR_OF_DAY, 23);
+                dataFinalCalendar.set(Calendar.MINUTE, 59);
+                dataFinalCalendar.set(Calendar.SECOND, 59);
+
+                // Configura o calendário para a data e hora da última dose informada
+                calendar.setTime(sdf.parse(dataUltima + " " + ultimaHora));
+
+                // Mantém a data atual do dispositivo como referência, mas define a hora como ultimaHora
+                Calendar startCalendar = Calendar.getInstance();
+                startCalendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(ultimaHora.split(":")[0]));
+                startCalendar.set(Calendar.MINUTE, Integer.parseInt(ultimaHora.split(":")[1]));
+                startCalendar.set(Calendar.SECOND, 0);
+                startCalendar.set(Calendar.MILLISECOND, 0);
+
+                // Adiciona os alarmes começando da última dose até a data final
+                while (startCalendar.before(dataFinalCalendar) || startCalendar.equals(dataFinalCalendar)) {
+                    // Adiciona o horário atual do alarme na tabela de medicamentos
+                    values.put("proximo_alarme", sdf.format(startCalendar.getTime()));
+                    long id = db.insert("medicamentos", null, values);
+
+                    // Configura o alarme para o horário calculado
+                    if (id != -1) {
+                        configurarAlarme(startCalendar, nome, id);
+                        Log.d("AdicionarMedicamento", "Alarme configurado para: " + sdf.format(startCalendar.getTime()));
                     }
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                    Toast.makeText(this, "Erro ao analisar a data final.", Toast.LENGTH_SHORT).show();
+
+                    // Incrementa o horário do alarme para o próximo baseado no intervalo
+                    startCalendar.add(Calendar.HOUR_OF_DAY, intervalo);
+
+                    // Verifica se o próximo horário ultrapassa a data final
+                    if (startCalendar.after(dataFinalCalendar)) {
+                        break; // Encerra o loop se ultrapassar a data final
+                    }
                 }
-            } else {
-                Toast.makeText(this, "Erro ao calcular o próximo alarme.", Toast.LENGTH_SHORT).show();
+
+                Toast.makeText(this, "Medicamento adicionado com sucesso!", Toast.LENGTH_SHORT).show();
+                finish();
+            } catch (ParseException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Erro ao analisar a data ou hora.", Toast.LENGTH_SHORT).show();
+            } finally {
+                db.close();
             }
-            db.close();
         });
 
-        // Configuração do botão "Voltar"
         findViewById(R.id.btn_voltar).setOnClickListener(v -> finish());
     }
 
-    /**
-     * Método para calcular os próximos alarmes com base na última hora, data final e intervalo.
-     * @param ultimaHora Hora da última dose (formato HH:mm).
-     * @param dataUltima Data final do tratamento (formato dd/MM/yyyy).
-     * @param intervalo Intervalo em horas entre cada dose.
-     * @return Calendar com o próximo alarme calculado.
-     */
-    private Calendar calcularProximosAlarmes(String ultimaHora, String dataUltima, int intervalo) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        try {
-            // Parseia a data final e a última hora informadas pelo usuário
-            Date ultimaData = sdf.parse(dataUltima + " " + ultimaHora);
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(ultimaData);
-            calendar.add(Calendar.HOUR_OF_DAY, intervalo); // Adiciona o intervalo para a próxima dose
-            return calendar; // Retorna o próximo alarme
-        } catch (ParseException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    /**
-     * Método para configurar alarmes com base no Calendar.
-     * Solicita permissões para alarmes exatos se necessário (para Android 12 ou superior).
-     * @param calendar Data e hora do próximo alarme.
-     * @param medicamento Nome do medicamento.
-     * @param id ID do medicamento no banco de dados.
-     */
     @SuppressLint({"ScheduleExactAlarm", "MissingPermission"})
     public void configurarAlarme(Calendar calendar, String medicamento, long id) {
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
 
-        // Verifica se o dispositivo está rodando Android 12 (API 31) ou superior
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            // Solicita a permissão para agendar alarmes exatos, se necessário
-            if (!alarmManager.canScheduleExactAlarms()) {
-                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
-                startActivity(intent);
-                return;  // Saia do método até que a permissão seja concedida
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && !alarmManager.canScheduleExactAlarms()) {
+            Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+            startActivity(intent);
         }
 
-        // Configuração do intent para o alarme
         Intent intent = new Intent(this, AlarmReceiver.class);
         intent.putExtra("medicamento", medicamento);
-        intent.putExtra("medicamento_id", id);
+        intent.putExtra("id", id);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) id, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
-        // Configurando o PendingIntent para o alarme
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(this, (int) id, intent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_MUTABLE);
-
-        // Define o alarme com precisão
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+        if (alarmManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+            } else {
+                alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.getTimeInMillis(), pendingIntent);
+            }
+        }
     }
 }

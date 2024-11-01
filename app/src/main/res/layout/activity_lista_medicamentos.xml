@@ -31,20 +31,20 @@
 
     <Button
         android:id="@+id/btn_excluir"
-        android:layout_width="406dp"
-        android:layout_height="61dp"
+        android:layout_width="373dp"
+        android:layout_height="72dp"
         android:backgroundTint="#F44336"
         android:text="Excluir Selecionados"
         app:layout_constraintBottom_toTopOf="@+id/btn_voltar"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.2"
+        app:layout_constraintHorizontal_bias="0.488"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/listViewMedicamentos" />
 
     <Button
         android:id="@+id/btn_voltar"
-        android:layout_width="409dp"
-        android:layout_height="58dp"
+        android:layout_width="368dp"
+        android:layout_height="64dp"
         android:backgroundTint="#2196F3"
         android:text="Voltar"
         app:layout_constraintBottom_toBottomOf="parent"

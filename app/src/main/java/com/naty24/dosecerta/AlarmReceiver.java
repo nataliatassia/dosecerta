@@ -8,7 +8,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-
 import androidx.core.app.NotificationCompat;
 
 public class AlarmReceiver extends BroadcastReceiver {
@@ -17,7 +16,7 @@ public class AlarmReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         String nomeMedicamento = intent.getStringExtra("medicamento");
-        long idMedicamento = intent.getLongExtra("medicamento_id", -1);
+        long idMedicamento = intent.getLongExtra("id", -1);
 
         if (nomeMedicamento != null && idMedicamento != -1) {
             exibirNotificacao(context, nomeMedicamento, idMedicamento);

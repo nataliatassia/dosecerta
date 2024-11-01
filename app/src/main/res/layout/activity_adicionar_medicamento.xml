@@ -74,8 +74,8 @@
 
     <Button
         android:id="@+id/btn_salvar"
-        android:layout_width="407dp"
-        android:layout_height="56dp"
+        android:layout_width="346dp"
+        android:layout_height="67dp"
         android:layout_marginTop="24dp"
         android:backgroundTint="#4CAF50"
         android:text="Salvar"
@@ -85,8 +85,8 @@
 
     <Button
         android:id="@+id/btn_voltar"
-        android:layout_width="409dp"
-        android:layout_height="56dp"
+        android:layout_width="347dp"
+        android:layout_height="62dp"
         android:layout_marginTop="16dp"
         android:backgroundTint="#2196F3"
         android:text="Voltar"

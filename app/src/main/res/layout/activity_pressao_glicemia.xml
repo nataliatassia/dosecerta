@@ -32,29 +32,29 @@
 
     <Button
         android:id="@+id/btn_salvar_pressao"
-        android:layout_width="378dp"
-        android:layout_height="58dp"
+        android:layout_width="377dp"
+        android:layout_height="63dp"
         android:backgroundTint="#4CAF50"
         android:text="Salvar" />
 
     <ListView
         android:id="@+id/listViewHistorico"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
+        android:layout_width="wrap_content"
+        android:layout_height="37dp"
         android:layout_marginTop="16dp"
         android:layout_weight="1" />
 
     <Button
         android:id="@+id/btn_excluir"
         android:layout_width="377dp"
-        android:layout_height="60dp"
+        android:layout_height="64dp"
         android:backgroundTint="#F44336"
         android:text="Excluir Selecionado" />
 
     <Button
         android:id="@+id/btn_voltar"
-        android:layout_width="377dp"
-        android:layout_height="58dp"
+        android:layout_width="378dp"
+        android:layout_height="67dp"
         android:backgroundTint="#2196F3"
         android:text="Voltar" />
 </LinearLayout>

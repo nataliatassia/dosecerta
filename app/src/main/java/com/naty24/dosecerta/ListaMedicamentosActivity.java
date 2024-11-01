@@ -99,7 +99,8 @@ public class ListaMedicamentosActivity extends AppCompatActivity {
                     listaMedicamentos.add(medicamento);
 
                     // Adiciona ao adaptador
-                    adapter.add(medicamento.getNome() + " - Próximo Alarme: " + medicamento.getProximoAlarme()  +
+                    String proximoAlarmeFormatado = formatarProximoAlarme(medicamento.getProximoAlarme());
+                    adapter.add("Medicamento: " + medicamento.getNome() + " - Próximo Alarme: " + proximoAlarmeFormatado +
                             (medicamento.isAlarmeAtivo() ? " (Ativo)" : " (Inativo)"));
                 } while (cursor.moveToNext());
 
@@ -116,6 +117,12 @@ public class ListaMedicamentosActivity extends AppCompatActivity {
             }
             db.close(); // Fecha o banco de dados
         }
+    }
+
+    // Método para formatar o próximo alarme
+    private String formatarProximoAlarme(String proximoAlarme) {
+        // Lógica para formatar a string de data e hora do próximo alarme
+        return proximoAlarme; // Substitua esta linha pela lógica de formatação que você precisa
     }
 
     // Exclui os medicamentos selecionados da lista e do banco de dados
